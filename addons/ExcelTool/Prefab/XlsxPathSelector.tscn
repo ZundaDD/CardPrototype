@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3 uid="uid://cwyn4dwsnwdpi"]
+
+[ext_resource type="Script" uid="uid://r5wnh5s8jllb" path="res://addons/ExcelTool/ConfigMemberEdior.cs" id="1_bsc3m"]
+
+[node name="XlsxPathSelector" type="HBoxContainer" node_paths=PackedStringArray("textDisplay", "browseButton")]
+offset_right = 240.0
+offset_bottom = 31.0
+script = ExtResource("1_bsc3m")
+textDisplay = NodePath("LineEdit")
+browseButton = NodePath("Browse")
+
+[node name="Label" type="Label" parent="."]
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+text = " Xlsx路径        ："
+
+[node name="LineEdit" type="LineEdit" parent="."]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "res://Assets/Xlsx"
+editable = false
+
+[node name="Browse" type="Button" parent="."]
+layout_mode = 2
+text = "选择"
