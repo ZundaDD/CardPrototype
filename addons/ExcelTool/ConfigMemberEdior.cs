@@ -1,9 +1,6 @@
+#if TOOLS
 using Godot;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ExcelTool;
 
@@ -18,30 +15,49 @@ public partial class ConfigMemberEdior : Control
 
     public Action<string> OnMemberChanged;
 
-    public override void _EnterTree()
+    private EditorFileDialog fileDialog;
+
+    public override void _Ready()
     {
-        browseButton.Pressed += Browse;
-        OnMemberChanged += (val) => textDisplay.Text = val;
+        try
+        {
+            if (browseButton != null)
+            {
+                browseButton = null;
+                browseButton.Pressed += Browse;
+            }
+        }
+        catch { }
     }
+
 
     public void InitMember(string value)
     {
-        textDisplay.Text = value;
+        if(textDisplay != null) textDisplay.Text = value;
     }
 
     private void Browse()
     {
-        var dirDialog = new EditorFileDialog();
-        dirDialog.FileMode = EditorFileDialog.FileModeEnum.OpenDir;
-        dirDialog.Access = EditorFileDialog.AccessEnum.Resources;
-
-        AddChild(dirDialog);
-        dirDialog.DirSelected += (val) =>
+        if (fileDialog == null || !IsInstanceValid(fileDialog))
         {
-            OnMemberChanged?.Invoke(val);
-            dirDialog.QueueFree();
-        };
+            fileDialog = new EditorFileDialog();
+            fileDialog.FileMode = EditorFileDialog.FileModeEnum.OpenDir;
+            fileDialog.Access = EditorFileDialog.AccessEnum.Resources;
 
-        dirDialog.PopupCentered(new Vector2I(600, 800));
+            AddChild(fileDialog);
+            fileDialog.DirSelected += (val) =>
+            {
+                textDisplay.Text = val;
+                OnMemberChanged?.Invoke(val);
+            };
+        }
+
+        fileDialog.PopupCentered(new Vector2I(600, 800));
+    }
+
+    public override void _ExitTree()
+    {
+        if (fileDialog != null && IsInstanceValid(fileDialog)) fileDialog.QueueFree();
     }
 }
+#endif

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b6e4ei6v3xc0b"]
+
+[ext_resource type="Script" uid="uid://baxuv15rwu16m" path="res://Scripts/Test/Model/CardScanTest.cs" id="1_ee6kx"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_ee6kx")

@@ -22,6 +22,10 @@ project/assembly_name="CardPrototype"
 
 enabled=PackedStringArray("res://addons/ExcelTool/plugin.cfg")
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://Assets/Localization/translation.en.translation", "res://Assets/Localization/translation.zh.translation")
+
 [rendering]
 
 renderer/rendering_method="mobile"

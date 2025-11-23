@@ -10,8 +10,6 @@ public partial class ExcelDock : EditorPlugin
     
     public override void _EnterTree()
     {
-        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
         dock = GD.Load<PackedScene>("res://addons/ExcelTool/ExcelDock.tscn").Instantiate<Control>();
         AddControlToDock(DockSlot.RightUl, dock);
     }

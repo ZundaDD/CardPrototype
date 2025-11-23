@@ -1,20 +1,23 @@
+#if TOOLS
 using Godot;
-using LogTools;
 using LitJson;
+using LogTools;
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace ExcelTool;
 
 /// <summary>
 /// 整体的Config编辑器
 /// </summary>
-[GlobalClass, Tool]
+[Tool]
 public partial class ConfigEditor : BoxContainer
 {
-    
     private const string configPath = "res://addons/ExcelTool/config.json";
 
     private List<string> xlsxFiles = new();
+
     private ExcelToolConfig config;
 
     [Export] private OptionButton xlsxList;
@@ -25,36 +28,45 @@ public partial class ConfigEditor : BoxContainer
 
     [Export] private LineEdit exportNamespace;
     [Export] private Button exportScriptButton;
-
-    public override void _EnterTree()
+    [Export] private Button exportResourceButton;
+    
+    public override void _Ready()
     {
+        if (exportScriptButton == null || exportResourceButton == null) return;
+
         exportNamespace.TextSubmitted += OnNamespaceChanged;
-        exportScriptButton.Pressed += () => ExcelExporter.ExportScript(config, xlsxFiles);
 
+        exportScriptButton.Pressed += OnExportScriptPressed;
+
+        exportResourceButton.Pressed += OnExportResourcePressed;
+
+        xlsxPath.OnMemberChanged -= OnXlsxPathChanged;
         xlsxPath.OnMemberChanged += OnXlsxPathChanged;
-        scriptExportPath.OnMemberChanged += (val) => { config.ScriptExportPath = val; SaveConfig(); };
-        resourceExportPath.OnMemberChanged += (val) => { config.ResourceExportPath = val; SaveConfig(); };
 
-        if (FileAccess.FileExists(configPath))
-        {
-            var json = FileAccess.GetFileAsString(configPath);
-            config = JsonMapper.ToObject<ExcelToolConfig>(json) ?? new();
-        }
-        else { config = new(); }
+        scriptExportPath.OnMemberChanged = (val) => { config.ScriptExportPath = val; SaveConfig(config); };
+        resourceExportPath.OnMemberChanged = (val) => { config.ResourceExportPath = val; SaveConfig(config); };
 
         LoadConfig();
     }
 
-    public override void _ExitTree()
+    private void OnExportScriptPressed()
     {
-        SaveConfig();
-        config = null;
+        LogTool.Trace("Exporting scripts");
+        if (config == null) LoadConfig();
+        ExcelExporter.ExportScript(config, xlsxFiles);
+    }
+
+    private void OnExportResourcePressed()
+    {
+        LogTool.Trace("Exporting Resources");
+        if (config == null) LoadConfig();
+        ExcelExporter.ExportResource(config, xlsxList.GetItemText(xlsxList.Selected));
     }
 
     private void OnNamespaceChanged(string text)
     {
         config.Namespace = text;
-        SaveConfig();
+        SaveConfig(config);
     }
 
     /// <summary>
@@ -64,19 +76,23 @@ public partial class ConfigEditor : BoxContainer
     private void OnXlsxPathChanged(string path)
     {
         config.XlsxPath = path;
+        RefreshFileList(path);
+        SaveConfig(config);
+    }
+
+    private void RefreshFileList(string path)
+    {
         xlsxList.Clear();
         xlsxFiles.Clear();
 
-        foreach(var file in DirAccess.GetFilesAt(path))
+        foreach (var file in DirAccess.GetFilesAt(path))
         {
-            if(file.EndsWith("xlsx"))
+            if (file.EndsWith("xlsx"))
             {
                 xlsxList.AddItem(file);
                 xlsxFiles.Add(file);
             }
         }
-
-        SaveConfig();
     }
 
     /// <summary>
@@ -84,30 +100,50 @@ public partial class ConfigEditor : BoxContainer
     /// </summary>
     private void LoadConfig()
     {
-        xlsxPath.InitMember(config.XlsxPath);
-        scriptExportPath.InitMember(config.ScriptExportPath);
-        resourceExportPath.InitMember(config.ResourceExportPath);
+        if (config == null)
+        {
+            if (FileAccess.FileExists(configPath))
+            {
+                var json = FileAccess.GetFileAsString(configPath);
+                config = JsonMapper.ToObject<ExcelToolConfig>(json) ?? new();
+            }
+            else { config = new(); }
+        }
 
-        exportNamespace.Text = config.Namespace;
-        OnXlsxPathChanged(config.XlsxPath);
+        if (xlsxPath != null) xlsxPath.InitMember(config.XlsxPath);
+        if (scriptExportPath != null) scriptExportPath.InitMember(config.ScriptExportPath);
+        if (resourceExportPath != null) resourceExportPath.InitMember(config.ResourceExportPath);
+        if (exportNamespace != null) exportNamespace.Text = config.Namespace;
+
+        RefreshFileList(config.XlsxPath);
     }
 
     /// <summary>
     /// 将Config保存到文件中
     /// </summary>
-    private void SaveConfig()
+    private static void SaveConfig(ExcelToolConfig config)
     {
-        var json = JsonMapper.ToJson(config);
-        using var file = FileAccess.Open(configPath, FileAccess.ModeFlags.Write);
-
-        if (file == null)
+        try
         {
-            var error = FileAccess.GetOpenError();
-            LogTool.Error($"无法打开文件: {configPath}, 错误代码: {error}");
-            return;
-        }
+            var json = JsonMapper.ToJson(config);
 
-        file.StoreString(json);
-        LogTool.Trace("ExcelToolConfig saved");
+            using var file = FileAccess.Open(configPath, FileAccess.ModeFlags.Write);
+
+            if (file == null)
+            {
+                var error = FileAccess.GetOpenError();
+                LogTool.Error($"无法打开文件: {configPath}, 错误代码: {error}");
+                return;
+            }
+
+            file.StoreString(json);
+            LogTool.Trace("ExcelToolConfig saved");
+        }
+        catch(Exception ex)
+        {
+            LogTool.Error($"保存时出错：{ex.Message}");
+        }
     }
+
 }
+#endif

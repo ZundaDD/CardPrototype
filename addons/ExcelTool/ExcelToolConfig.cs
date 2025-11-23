@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using System.IO;
+#if TOOLS
 
 namespace ExcelTool;
 
@@ -13,3 +12,4 @@ public class ExcelToolConfig
 
     public string ResourceExportPath { get; set; } = $"res://Assets/Generated";
 }
+#endif

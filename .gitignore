@@ -3,3 +3,9 @@
 /android/
 .vs
 *.json
+
+
+*.xlsx
+*.csv
+*.translation
+Generated/
