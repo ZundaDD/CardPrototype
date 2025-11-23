@@ -8,4 +8,5 @@
 *.xlsx
 *.csv
 *.translation
-Generated/
+Assets/Generated/
+Assets/Localization/
